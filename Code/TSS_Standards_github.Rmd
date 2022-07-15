@@ -1,0 +1,240 @@
+---
+title: "TSS-Test"
+author: "Caz Bell"
+date: '2022-07-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(dataRetrieval) #read in necessary libraries
+library(plotly)
+library(dplyr)
+library(MASS)
+library(knitr)
+library(boot)
+library(ggplot2)
+library(data.table)
+library(formattable)
+library(tidyr)
+```
+
+```{r}
+TSS_Caz <- read.csv('~/AWQP/TSS.csv') %>% 
+  dplyr::select(TSS..mg.L., Name, TSS) #read in data for each persons TSS Standards
+mean_Caz = mean(TSS_Caz$TSS..mg.L.)
+ RMSE_Caz <-  sqrt(mean((TSS_Caz$TSS - TSS_Caz$TSS..mg.L.)^2)) #find RSME
+sd_Caz <- sd(TSS_Caz$TSS..mg.L., na.rm = FALSE) #find standard deviation
+cv_Caz <- sd(TSS_Caz$TSS..mg.L.) / mean(TSS_Caz$TSS..mg.L.) * 100 #find cv
+
+TSS_Justin <- read.csv('~/AWQP/TSS_Justin.csv') %>% 
+  dplyr::select(TSS..mg.L., Name, TSS)
+mean_Justin = mean(TSS_Justin$TSS..mg.L.)
+ RMSE_Justin <-  sqrt(mean((TSS_Justin$TSS - TSS_Justin$TSS..mg.L.)^2)) #find RSME
+sd_Justin <- sd(TSS_Justin$TSS..mg.L., na.rm = FALSE) #find standard deviation
+cv_Justin <- sd(TSS_Justin$TSS..mg.L.) / mean(TSS_Justin$TSS..mg.L.) * 100 #find cv
+
+TSS_Melina <- read.csv('~/AWQP/TSS_Melina.csv') %>% 
+  dplyr::select(TSS..mg.L., Name, TSS)
+mean_Mel = mean(TSS_Melina$TSS..mg.L.)
+ RMSE_Mel <-  sqrt(mean((TSS_Melina$TSS - TSS_Melina$TSS..mg.L.)^2)) #find RSME
+sd_Mel <- sd(TSS_Melina$TSS..mg.L., na.rm = FALSE) #find standard deviation
+cv_Mel <- sd(TSS_Melina$TSS..mg.L.) / mean(TSS_Melina$TSS..mg.L.) * 100
+
+TSS_Mia <- read.csv('~/AWQP/TSS_Mia_.csv') %>% 
+  dplyr::select(TSS..mg.L., Name, TSS) %>%
+  na.omit()
+ mean_Mia = mean(TSS_Mia$TSS..mg.L.)
+ RMSE_Mia <-  sqrt(mean((TSS_Mia$TSS - TSS_Mia$TSS..mg.L.)^2)) #find RSME
+sd_Mia <- sd(TSS_Mia$TSS..mg.L., na.rm = FALSE) #find standard deviation
+cv_Mia <- sd(TSS_Mia$TSS..mg.L.) / mean(TSS_Mia$TSS..mg.L.) * 100 
+
+TSS_Morgan <- read.csv('~/AWQP/Morgan_TSS.csv') %>% 
+  dplyr::select(TSS..mg.L., Name, TSS) %>%
+  na.omit()
+ mean_Morgan = mean(TSS_Morgan$TSS..mg.L.)
+ RMSE_Morgan <-  sqrt(mean((TSS_Morgan$TSS - TSS_Morgan$TSS..mg.L.)^2)) #find RSME
+sd_Morgan <- sd(TSS_Morgan$TSS..mg.L., na.rm = FALSE) #find standard deviation
+cv_Morgan <- sd(TSS_Morgan$TSS..mg.L.) / mean(TSS_Morgan$TSS..mg.L.) * 100 
+
+TSS_bind1 <- rbind(TSS_Caz, TSS_Justin, TSS_Melina, TSS_Mia, TSS_Morgan) %>% #combine individual data sets
+  na.omit() %>% 
+  dplyr::select(TSS..mg.L., Name)
+TSS <- TSS_bind1 %>%
+ group_by(Name) %>%
+  mutate(row = row_number()) %>%
+  tidyr::pivot_wider(names_from = Name, values_from = TSS..mg.L.) %>%
+   dplyr::select(-row)
+```
+
+```{r}
+tab_stats <- matrix(c(mean_Caz,sd_Caz, RMSE_Caz, cv_Caz, mean_Justin, sd_Justin, RMSE_Justin, cv_Justin, mean_Mel, sd_Mel, RMSE_Mel, cv_Mel, mean_Mia,sd_Mia, RMSE_Mia, cv_Mia, mean_Morgan,sd_Morgan, RMSE_Morgan, cv_Morgan), ncol=4, byrow=TRUE) #create matrix for table
+colnames(tab_stats) <- c('Mean(ppm)','Standard Deviation(ppm)','Root Mean Square Error(ppm)', 'Coefficient of Variation(%)') #label columns
+rownames(tab_stats) <- c('Caz','Justin','Melina', 'Mia', 'Morgan') #label rows
+table_stats <- as.table(tab_stats) 
+  
+formattable(table_stats) %>%
+  kable(caption = "Summary Statistics") #format table
+```
+
+
+
+```{r}
+fig <- plot_ly(TSS_bind1, x = ~Name, y = ~TSS..mg.L., color = ~Name, colors =  c("red", "blue", "purple", 'green4', 'orange2')) #select values for plotly, assign colors
+fig <- fig %>% add_markers(marker = list(line = list(color = ~Name, width = 1))) 
+fig <- fig %>% layout(
+    title = "TSS Standards", #title
+    xaxis = list(domain = c(0.1, 1)),
+    yaxis = list(title = "TSS (mg/L)"),
+    updatemenus = list(
+      list(
+        y = 0.8,
+        buttons = list(
+
+          list(method = "restyle", #set up box plot
+               args = list("type", "box"),
+               label = "Box plot" 
+              ),
+
+          list(method = "restyle", #set up violin plot
+               args = list("type", "violin"),
+               label = "Violin"
+               )))
+    ))
+
+fig
+
+
+      
+```
+
+
+```{r}
+
+cols <- c("red", "blue", "purple", 'green4', 'orange2')  #attach colors for each person
+# Basic density plot in ggplot2
+ggplot( TSS_bind1, aes(x = TSS..mg.L., colour = Name)) + #sort colors for names
+  geom_density(lwd = 1.2, linetype = 1) + 
+  scale_color_manual(values = cols) +  #use previous set colors
+  labs(x = 'TSS mg/L', y = 'Density',
+       title = 'TSS Kernel Density Estimation') #label the graph
+```
+
+
+```{r}
+mean.function <- function(x, index) {
+  d <- x[index]     # This first line will go in ever bootstrap function you make.
+  return(mean(d))  
+}
+set.seed(50)
+BootDist_C <- boot(data = TSS_Caz$TSS..mg.L., mean.function, R=10000)
+low_C <- quantile( BootDist_C$t, probs=(.025))
+upper_C <- quantile( BootDist_C$t, probs= (.975))
+
+```
+
+
+```{r, echo=FALSE}
+BootDist_J <- boot(data = TSS_Justin$TSS..mg.L., statistic = mean.function, R=10000)
+set.seed(50)
+low_J <- quantile( BootDist_J$t, probs=(.025))
+upper_J <- quantile( BootDist_J$t, probs= (.975))
+
+```
+
+
+```{r, echo=FALSE}
+BootDist_Mel <- boot(data = TSS_Melina$TSS..mg.L., statistic = mean.function, R=10000) 
+set.seed(50)
+low_Mel <- quantile( BootDist_Mel$t, probs=(.025))
+upper_Mel <- quantile( BootDist_Mel$t, probs= (.975))
+BootDist_Mel <- boot(data = TSS_Melina$TSS..mg.L., statistic = mean.function, R=10000)
+
+```
+
+```{r, echo = FALSE}
+BootDist_Mia <- boot(data = TSS_Mia$TSS..mg.L., statistic = mean.function, R=10000)
+set.seed(50)
+low_Mia <- quantile( BootDist_Mia$t, probs=(.025))
+upper_Mia <- quantile( BootDist_Mia$t, probs= (.975))
+```
+
+
+```{r}
+TSS_Morgan <- read.csv('~/AWQP/Morgan_TSS.csv') %>% 
+  dplyr::select(TSS..mg.L., Name, TSS) %>%
+  na.omit()
+ mean_Morgan = mean(TSS_Morgan$TSS..mg.L.)
+ RMSE_Morgan <-  sqrt(mean((TSS_Morgan$TSS - TSS_Morgan$TSS..mg.L.)^2)) #find RSME
+sd_Morgan <- sd(TSS_Morgan$TSS..mg.L., na.rm = FALSE) #find standard deviation
+cv_Morgan <- sd(TSS_Morgan$TSS..mg.L.) / mean(TSS_Morgan$TSS..mg.L.) * 100 
+
+BootDist_Morgan <- boot(data = TSS_Morgan$TSS..mg.L., statistic = mean.function, R=10000)
+set.seed(50)
+low_Morg <- quantile( BootDist_Morgan$t, probs=(.025))
+upper_Morg <- quantile( BootDist_Morgan$t, probs= (.975))
+
+```
+
+
+```{r}
+mean.function <- function(x, index) {
+  d <- x[index]     # This first line will go in ever bootstrap function you make.
+  return(mean(d))  
+}
+set.seed(50)
+BootDist_C1 <- boot(data = TSS_Caz$TSS..mg.L., mean.function, R=10000)
+low_C1 <- quantile( BootDist_C$t, probs=(.005))
+upper_C1 <- quantile( BootDist_C$t, probs= (.995))
+
+```
+
+
+```{r, echo=FALSE}
+BootDist_J1 <- boot(data = TSS_Justin$TSS..mg.L., statistic = mean.function, R=10000)
+set.seed(50)
+low_J1 <- quantile( BootDist_J$t, probs=(.005))
+upper_J1 <- quantile( BootDist_J$t, probs= (.995))
+
+```
+
+
+```{r, echo=FALSE}
+BootDist_Mel1 <- boot(data = TSS_Melina$TSS..mg.L., statistic = mean.function, R=10000) 
+set.seed(50)
+low_Mel1 <- quantile( BootDist_Mel$t, probs=(.005))
+upper_Mel1 <- quantile( BootDist_Mel$t, probs= (.995))
+BootDist_Mel1 <- boot(data = TSS_Melina$TSS..mg.L., statistic = mean.function, R=10000)
+
+```
+
+```{r, echo = FALSE}
+BootDist_Mia1 <- boot(data = TSS_Mia$TSS..mg.L., statistic = mean.function, R=10000)
+set.seed(50)
+low_Mia1 <- quantile( BootDist_Mia$t, probs=(.005))
+upper_Mia1 <- quantile( BootDist_Mia$t, probs= (.995))
+```
+
+
+```{r}
+
+BootDist_Morgan1 <- boot(data = TSS_Morgan$TSS..mg.L., statistic = mean.function, R=10000)
+set.seed(50)
+low_Morg1 <- quantile( BootDist_Morgan$t, probs=(.005))
+upper_Morg1 <- quantile( BootDist_Morgan$t, probs= (.995))
+
+```
+
+```{r, echo = FALSE}
+tab_CI <- matrix(c(mean_Caz, low_C, upper_C, low_C1, upper_C1, mean_Justin, low_J, upper_J, low_J1, upper_J1, mean_Mel, low_Mel, upper_Mel,low_Mel1, upper_Mel1,  mean_Mia, low_Mia, upper_Mia, low_Mia1, upper_Mia1, mean_Morgan, low_Morg, upper_Morg, low_Morg1, upper_Morg1), ncol= 5 , byrow=TRUE)
+colnames(tab_CI) <- c( 'Mean (ppm)','Lower CI (95%)','Upper CI (95%)', 'Lower CI (90%)', 'Upper CI (90%)' )
+rownames(tab_CI) <- c('Caz','Justin','Melina', 'Mia', 'Morgan')
+table_CI <- as.table(tab_CI)  
+formattable(table_CI) %>% 
+  kable(caption = "Confidence Intervals")
+```
+```
+

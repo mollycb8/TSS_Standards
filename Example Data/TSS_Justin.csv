@@ -1,0 +1,11 @@
+Tin no.,sample ID,Irrigation ,Station ,Date,volume (mL),clean dry mass (g),dirty dry mass (1) (g),dirty dry mass (2) (g),sediment mass (mg),TSS (mg/L),Name,TSS,sediment mass (mg),TSS (mg/L),,TSS error due to scale is,
+66,Stock Solution (50 mg/L),,,,30,1.2235,1.2254,,1.9,63.33333333,Justin,50,0.2,#VALUE!,,±3.33333,mg/L
+67,Stock Solution (50 mg/L),,,,30,1.2122,1.2146,,2.4,80,Justin,50,3.33,0.1,,,
+68,Stock Solution (50 mg/L),,,,30,1.2035,1.2057,,2.2,73.33333333,Justin,50,10,0.3,,,
+69,Stock Solution (50 mg/L),,,,30,1.2218,1.2238,,2,66.66666667,Justin,50,,,,,
+70,Stock Solution (50 mg/L),,,,30,1.2073,1.2089,,1.6,53.33333333,Justin,50,,,,,
+71,Stock Solution (50 mg/L),,,,30,1.1977,1.1994,,1.7,56.66666667,Justin,50,,,,,
+72,Stock Solution (50 mg/L),,,,30,1.2166,1.2183,,1.7,56.66666667,Justin,50,,,,,
+1,Stock Solution (50 mg/L),,,,30,1.2007,1.2026,,1.9,63.33333333,Justin,50,,,,,
+2,Stock Solution (50 mg/L),,,,30,1.2123,1.2144,,2.1,70,Justin,50,,,,,
+3,Stock Solution (50 mg/L),,,,30,1.2212,1.2233,,2.1,70,Justin,50,,,,,
